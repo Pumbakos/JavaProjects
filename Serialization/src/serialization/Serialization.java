@@ -1,5 +1,6 @@
 package serialization;
 
+import com.sun.istack.internal.NotNull;
 import java.io.Serializable;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
@@ -14,7 +15,20 @@ public abstract class Serialization implements Serializable {
     public static boolean serialize(Object object) {
         String fileName = generateFileName(object);
 
-        System.out.println(fileName);
+        try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            output.writeObject(object);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean serialize(Object object, @NotNull String fileName) {
+        if(!fileName.endsWith(".bin")){
+            fileName += ".bin";
+        }
+
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(fileName))) {
             output.writeObject(object);
             return true;
@@ -26,6 +40,19 @@ public abstract class Serialization implements Serializable {
 
     public static Object deserialize(Object object) {
         String fileName = generateFileName(object);
+
+        try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(fileName))) {
+            Object deserializedObject = (Object) input.readObject();
+            return deserializedObject;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public static Object deserialize(@NotNull String fileName) {
+        if(!fileName.endsWith(".bin")){
+            throw new IllegalArgumentException("Filename must ends with 'bin' extension");
+        }
 
         try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(fileName))) {
             Object deserializedObject = (Object) input.readObject();

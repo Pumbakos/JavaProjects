@@ -1,12 +1,16 @@
 package audioPlayer;
 
-import java.io.File;
-
 public class Main {
     public static void main(String[] args) {
         AudioPlayer player = new AudioPlayer();
+//        String bandyta = "D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\src\\audioPlayer\\music\\bandyta.mp3";
 
-        player.listFilesForFolder(new File("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\src\\audioPlayer"));
+        player.openFolder();
         player.listFiles();
+
+        String song = player.chooseSong();
+
+        player.play(song);
+//        System.out.println(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "music/");
     }
 }

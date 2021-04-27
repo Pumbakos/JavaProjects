@@ -1,6 +1,6 @@
 package audioPlayer;
-
 import audioPlayer.opener.Opener;
+
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
@@ -14,18 +14,37 @@ import java.util.Random;
 public class AudioPlayer{
     private final Opener opener = new Opener("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\");
     private String defaultFolder;
-    private static int ID;
+    private int ID;
+    private int index;
 
     private volatile AdvancedPlayer player = null;
     private volatile PlaybackEvent event = null;
     private volatile Thread backgroundPlayback;
     private volatile int frameStoppedAt;
 
-    private String currentSong;
+    private volatile String currentSong;
+    private volatile String previousSong;
+    private volatile String nextSong;
 
     public AudioPlayer(){
         defaultFolder = opener.getDefaultFolder();
         ID = generateID();
+    }
+
+    private synchronized void setPlayer(String path) {
+        try {
+            BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(path));
+            player = new AdvancedPlayer(buffer);
+        } catch (IOException | JavaLayerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setEvent(AdvancedPlayer player) {
+        event = new PlaybackEvent(player, ID, 0);
+        event.setSource(player);
+        event.setId(ID);
+        event.setFrame(0);
     }
 
     /**
@@ -35,17 +54,12 @@ public class AudioPlayer{
      * @param path : full path to song
      */
     private synchronized void setBackgroundPlayback(String path) {
-//        opener.openFolder();
+        setPlayer(path);
+        setEvent(player);
         backgroundPlayback = new Thread(() -> {
             try {
-                BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(path));
-                player = new AdvancedPlayer(buffer);
-                event = new PlaybackEvent(player, ID, 0);
-                event.setSource(player);
-                event.setId(ID);
-                event.setFrame(0);
                 player.play();
-            } catch (IOException | JavaLayerException e) {
+            } catch (JavaLayerException e) {
                 e.printStackTrace();
             }
         });
@@ -62,6 +76,7 @@ public class AudioPlayer{
     }
 
     public synchronized void pause() {
+        System.out.println(event.getFrame());
     }
 
     public void resume() {
@@ -93,11 +108,34 @@ public class AudioPlayer{
         opener.setDefaultFolder(path);
     }
 
-    public String getCurrentSong() {
-        return opener.getCurrentSong();
+    public String getPreviousSong() {
+        return previousSong;
     }
 
+    private void setPreviousSong() {
+//        this.previousSong = opener.setPreviousSong(opener.getIndex());
+        nextSong = opener.getPreviousSong();
+    }
+
+    public String getNextSong() {
+        return nextSong;
+    }
+
+    private void setNextSong() {
+//        this.nextSong = opener.setNextSong(opener.getIndex());
+        previousSong = opener.getNextSong();
+    }
+
+    public String getCurrentSong() {
+        return currentSong;
+    }
+
+    /**
+     *  @usageOf: setPreviousSong(), setNextSong() : we want to set next and previous song everytime we set new one
+     */
     public void setCurrentSong() {
         currentSong = opener.setCurrentSong();
+        setPreviousSong();
+        setNextSong();
     }
 }

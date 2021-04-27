@@ -13,10 +13,14 @@ public class Main {
 
         player.play();
 
+//        player.setNextSong();
+
+        System.out.println("PREV: " + player.getPreviousSong());
+        System.out.println("NEXT: " + player.getNextSong());
 
         System.out.print(">> ");
         if (new Scanner(System.in).nextInt() == 1){
-//            player.pause();
+            player.pause();
             player.stop();
         }
     }

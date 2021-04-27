@@ -1,65 +1,31 @@
 package audioPlayer;
 
+import audioPlayer.opener.Opener;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
-import javazoom.jl.player.advanced.PlaybackListener;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-import java.util.Scanner;
 
-public class AudioPlayer {
-    private final String MUSIC_FOLDER = "D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\";
-    private final Scanner scanner = new Scanner(System.in);
-    private volatile AdvancedPlayer player;
-    private volatile PlaybackEvent event;
-    private volatile PlaybackListener listener;
-    private volatile Thread backgroundPlay;
-    private List<File> musicList = new ArrayList();
+public class AudioPlayer{
+    private final Opener opener = new Opener("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\");
+    private String defaultFolder;
+    private static int ID;
+
+    private volatile AdvancedPlayer player = null;
+    private volatile PlaybackEvent event = null;
+    private volatile Thread backgroundPlayback;
+    private volatile int frameStoppedAt;
+
     private String currentSong;
-    private int ID;
 
-    /**
-     * Opens default music folder - my local actually :)
-     */
-    public void openFolder() throws IOException, FileNotFoundException {
-        File path = new File(MUSIC_FOLDER);
-        System.out.println(path);
-        for (File file : path.listFiles()) {
-            if (file.isDirectory()) {
-//                listFilesForFolder(file);
-                continue;
-            } else {
-                musicList.add(new File(file.getName()));
-            }
-        }
-    }
-
-    /**
-     * Displays the songs in the current folder and waits for the user's keyboard input
-     *
-     * @return full path to song -> @deprecated
-     */
-    public void chooseSong() {
-        int usersSongChoice;
-
-        listSongs();
-        System.out.print("\nChoose song(1-" + musicList.size() + "): ");
-        usersSongChoice = scanner.nextInt();
-        currentSong = musicList.get(usersSongChoice - 1).getName();
-    }
-
-    /**
-     * Displays songs saved at @see musicList
-     */
-    private void listSongs() {
-        for (int i = 0; i < musicList.size(); i++) {
-            System.out.println((i + 1) + ". " + musicList.get(i).getName().substring(0, musicList.get(i).getName().length() - 4).replace('_', ' '));
-        }
+    public AudioPlayer(){
+        defaultFolder = opener.getDefaultFolder();
+        ID = generateID();
     }
 
     /**
@@ -68,12 +34,16 @@ public class AudioPlayer {
      *
      * @param path : full path to song
      */
-    private synchronized void prepareSong(String path) {
-        backgroundPlay = new Thread(() -> {
+    private synchronized void setBackgroundPlayback(String path) {
+//        opener.openFolder();
+        backgroundPlayback = new Thread(() -> {
             try {
                 BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(path));
                 player = new AdvancedPlayer(buffer);
                 event = new PlaybackEvent(player, ID, 0);
+                event.setSource(player);
+                event.setId(ID);
+                event.setFrame(0);
                 player.play();
             } catch (IOException | JavaLayerException e) {
                 e.printStackTrace();
@@ -81,30 +51,28 @@ public class AudioPlayer {
         });
     }
 
-    private void generateID() {
-        this.ID = new SecureRandom().nextInt(new Random().nextInt());
-    }
-
-
+    /**
+     * starts set thread
+     * @throws IllegalThreadStateException if the thread was already started
+     */
     public synchronized void play() throws IllegalThreadStateException {
-        prepareSong(MUSIC_FOLDER + currentSong);
+        setBackgroundPlayback(defaultFolder + currentSong);
 
-        backgroundPlay.start();
-
+        backgroundPlayback.start();
     }
 
-    public void pause() {
+    public synchronized void pause() {
     }
 
     public void resume() {
     }
 
     /**
-     * stops background current playing song
+     * stops the currently playing song
      */
     public synchronized void stop() throws SecurityException, NullPointerException {
         this.player.close();
-        this.backgroundPlay.interrupt();
+        this.backgroundPlayback.interrupt();
     }
 
     public void next() {
@@ -113,30 +81,23 @@ public class AudioPlayer {
     public void previous() {
     }
 
-    /**
-     * lists all files within given folder - excludes sub-folders
-     *
-     * @param path: full path to folder where stored songs
-     */
-    private void listFilesForFolder(File path) {
-        for (File file : path.listFiles()) {
-            if (file.isDirectory()) {
-//                listFilesForFolder(file);
-                continue;
-            } else {
-                musicList.add(new File(file.getName()));
-            }
-        }
+    private int generateID() {
+        return new SecureRandom().nextInt(new Random().nextInt(Integer.MAX_VALUE));
+    }
+
+    public String getDefaultFolder() {
+        return opener.getDefaultFolder();
+    }
+
+    public void setDefaultFolder(String path) {
+        opener.setDefaultFolder(path);
     }
 
     public String getCurrentSong() {
-        return currentSong;
+        return opener.getCurrentSong();
     }
 
-    /**
-     * @return full path to chosen song
-     */
-    private String getPathToSong() {
-        return MUSIC_FOLDER.concat(currentSong);
+    public void setCurrentSong() {
+        currentSong = opener.setCurrentSong();
     }
 }

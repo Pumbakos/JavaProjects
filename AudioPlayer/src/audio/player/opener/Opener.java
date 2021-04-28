@@ -1,4 +1,4 @@
-package audioPlayer.opener;
+package audio.player.opener;
 
 import java.io.File;
 import java.util.ArrayList;

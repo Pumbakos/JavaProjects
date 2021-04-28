@@ -1,4 +1,4 @@
-package audioPlayer;
+package audio.player;
 
 import javazoom.jl.decoder.JavaLayerException;
 
@@ -15,6 +15,9 @@ public class Main {
 
 //        player.setNextSong();
 
+//        System.out.println("EVENT: " + player.getEvent());
+//        System.out.println("SOURCE: " + player.getEventSource());
+
         System.out.println("PREV: " + player.getPreviousSong());
         System.out.println("NEXT: " + player.getNextSong());
 
@@ -22,6 +25,9 @@ public class Main {
         if (new Scanner(System.in).nextInt() == 1){
             player.pause();
             player.stop();
+        }
+        if (new Scanner(System.in).nextInt() == 2){
+            System.out.println("KONIEC");
         }
     }
 }

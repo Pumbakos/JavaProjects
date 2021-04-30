@@ -23,11 +23,14 @@ public class Main {
 
         System.out.print(">> ");
         if (new Scanner(System.in).nextInt() == 1){
-            player.pause();
-            player.stop();
+            player.previous();
+            System.out.println("PREV: " + player.getPreviousSong());
+            System.out.println("NEXT: " + player.getNextSong());
         }
         if (new Scanner(System.in).nextInt() == 2){
-            System.out.println("KONIEC");
+            player.next();
+            System.out.println("PREV: " + player.getPreviousSong());
+            System.out.println("NEXT: " + player.getNextSong());
         }
     }
 }

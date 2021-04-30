@@ -13,9 +13,8 @@ import java.util.Random;
 
 public class AudioPlayer extends PlaybackListener{
     private final Opener opener = new Opener("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\");
-    private String defaultFolder;
     private int ID;
-    private int index;
+
 
     private volatile AdvancedPlayer player = null;
     private volatile PlaybackEvent event = null;
@@ -26,16 +25,11 @@ public class AudioPlayer extends PlaybackListener{
     private volatile String previousSong;
     private volatile String nextSong;
 
-//    private AudioPlayer(InputStream inputStream) throws JavaLayerException {
-//        super(inputStream);
-//    }
-
     public AudioPlayer() throws JavaLayerException{
-        defaultFolder = opener.getDefaultFolder();
         ID = generateID();
     }
 
-    private synchronized void setPlayer(String path) {
+    private void setPlayer(String path) {
         try {
             BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(path));
             player = new AdvancedPlayer(buffer);
@@ -65,12 +59,11 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     /**
-     * Prepares app for background activity
-     * Waits until the start of the thread
-     *
+     * *Prepares app for background activity
+     * *Waits until the start of the thread
      * @param path : full path to song
      */
-    private synchronized void setBackgroundPlayback(String path) {
+    private void setBackgroundPlayback(String path) {
         setPlayer(path);
         setEvent(player);
         setListener(player);
@@ -85,20 +78,20 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     /**
-     * starts set thread
+     * *starts set thread
      * @throws IllegalThreadStateException if the thread was already started
      */
-    public synchronized void play() throws IllegalThreadStateException {
-        setBackgroundPlayback(defaultFolder + currentSong);
-        //this getter should not be removed
-        //without it the event is not set
+    public void play() throws IllegalThreadStateException {
+        setBackgroundPlayback(getDefaultFolder() + currentSong);
+        //!this getter should not be removed
+        //!without it the event is not set
         getEventSource();
 
         backgroundPlayback.start();
     }
 
     //FIXME: event need to return frame it stopped at
-    public synchronized void pause() {
+    public void pause() {
         System.out.println("FRAME: " + frameStoppedAt);
         System.out.println("ID: " + event.getId());
         System.out.println("SOURCE: " + event.getSource());
@@ -109,19 +102,37 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     /**
-     * stops the currently playing song
+     * *stops the currently playing song
      */
-    public synchronized void stop() throws SecurityException, NullPointerException {
-//        this.player.close();
+    public void stop() throws SecurityException, NullPointerException {
         playbackFinished(event);
-        player.stop();
+        this.player.close();
+//        player.stop();
         this.backgroundPlayback.interrupt();
     }
 
     public void next() {
+        stop();
+        currentSong = opener.setCurrentSong(getIndex() +1);
+
+        setNextSong();
+        nextSong = getNextSong();
+
+        setPreviousSong();
+        previousSong = getPreviousSong();
+        play();
     }
 
     public void previous() {
+        stop();
+        currentSong =  opener.setCurrentSong(getIndex() -1);
+
+        setNextSong();
+        nextSong = getNextSong();
+
+        setPreviousSong();
+        previousSong = getPreviousSong();
+        play();
     }
 
     private int generateID() {
@@ -141,7 +152,6 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     private void setPreviousSong() {
-//        this.previousSong = opener.setPreviousSong(opener.getIndex());
         previousSong = opener.getPreviousSong();
     }
 
@@ -150,7 +160,6 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     private void setNextSong() {
-//        this.nextSong = opener.setNextSong(opener.getIndex());
         nextSong = opener.getNextSong();
     }
 
@@ -158,8 +167,12 @@ public class AudioPlayer extends PlaybackListener{
         return currentSong;
     }
 
+    public int getIndex(){
+        return opener.getIndex();
+    }
+
     /**
-     *  @usageOf: setPreviousSong(), setNextSong() : we want to set next and previous song everytime we set new one
+     *  @usageOf: setPreviousSong(), setNextSong() : we want to set next and previous song everytime we set new current one
      */
     public void setCurrentSong() {
         currentSong = opener.setCurrentSong();
@@ -167,10 +180,10 @@ public class AudioPlayer extends PlaybackListener{
         setNextSong();
     }
 
-    private synchronized PlaybackEvent getEvent() {
+    private PlaybackEvent getEvent() {
         return event;
     }
-    private synchronized AdvancedPlayer getEventSource() {
+    private AdvancedPlayer getEventSource() {
         return event.getSource();
     }
 }

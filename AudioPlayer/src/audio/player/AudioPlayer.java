@@ -1,5 +1,5 @@
 package audio.player;
-import audio.player.opener.Opener;
+import audio.opener.Opener;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
@@ -86,7 +86,7 @@ public class AudioPlayer extends PlaybackListener{
         //!this getter should not be removed
         //!without it the event is not set
         getEventSource();
-
+        System.out.println("playing '" + currentSong.substring(0, currentSong.length() -4).replace('_', ' ') + "' ...");
         backgroundPlayback.start();
     }
 
@@ -169,6 +169,10 @@ public class AudioPlayer extends PlaybackListener{
 
     public int getIndex(){
         return opener.getIndex();
+    }
+
+    public void list(){
+        opener.listSongs();
     }
 
     /**

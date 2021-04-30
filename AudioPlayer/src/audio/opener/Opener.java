@@ -1,4 +1,4 @@
-package audio.player.opener;
+package audio.opener;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class Opener {
     public Opener(String defaultFolder) {
         this.defaultFolder = defaultFolder;
         openFolder();
-        listSongs();
+//        listSongs();
     }
 
     /**
@@ -37,7 +37,7 @@ public class Opener {
     /**
      * *Displays songs saved at musicList
      */
-    private void listSongs() {
+    public void listSongs() {
         for (int i = 0; i < musicList.size(); i++) {
             System.out.println((i + 1) + ". " + musicList.get(i).getName().
                     substring(0, musicList.get(i).getName().length() - 4).replace('_', ' '));
@@ -50,7 +50,7 @@ public class Opener {
      * @return chosen song
      */
     public String setCurrentSong() throws InputMismatchException {
-        System.out.print("\nChoose song(1-" + musicList.size() + "): ");
+        System.out.print("\nChoose song (1-" + musicList.size() + "): ");
         index = scanner.nextInt() -1;
 
         currentSong = musicList.get(index).getName();

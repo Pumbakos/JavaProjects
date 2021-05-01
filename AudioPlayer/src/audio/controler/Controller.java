@@ -29,6 +29,7 @@ public class Controller {
     }
 
     public void help() {
+        System.out.println("Incorrect value.");
         System.out.println("Enter 'help' for help");
     }
 
@@ -37,34 +38,22 @@ public class Controller {
             System.out.print(">> ");
             command = scanner.nextLine().toLowerCase();
             switch (command) {
-                case "play": {
+                case "play" -> {
                     player.play();
                 }
-                break;
-
-                case "stop": {
+                case "stop", "exit" -> {
                     player.stop();
                 }
-                break;
-
-                case "next": {
+                case "next" -> {
                     player.next();
                 }
-                break;
-
-                case "previous": {
+                case "previous" -> {
                     player.previous();
                 }
-                break;
-
-                case "list": {
+                case "list" -> {
                     player.list();
                 }
-                break;
-
-                default:
-                    help();
-                    break;
+                default -> help();
             }
         }while(!command.equalsIgnoreCase("exit"));
     }

@@ -1,4 +1,5 @@
 package audio.player;
+
 import audio.opener.Opener;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
@@ -15,15 +16,25 @@ public class AudioPlayer extends PlaybackListener{
     private final Opener opener = new Opener("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\");
     private int ID;
 
+    private volatile long threadID;
+    private volatile String threadName;
 
     private volatile AdvancedPlayer player = null;
     private volatile PlaybackEvent event = null;
     private volatile Thread backgroundPlayback;
-    private volatile int frameStoppedAt;
+//            = new Thread(() -> {
+//        try {
+//            player.play();
+//        } catch (JavaLayerException e) {
+//            e.printStackTrace();
+//        }
+//    });
 
     private volatile String currentSong;
     private volatile String previousSong;
     private volatile String nextSong;
+    private volatile int frameStoppedAt;
+    private volatile boolean isRunning;
 
     public AudioPlayer() throws JavaLayerException{
         ID = generateID();
@@ -62,8 +73,9 @@ public class AudioPlayer extends PlaybackListener{
      * *Prepares app for background activity
      * *Waits until the start of the thread
      * @param path : full path to song
+     * @throws NullPointerException if you would turn on another song without stopping the previous one
      */
-    private void setBackgroundPlayback(String path) {
+    private void setBackgroundPlayback(String path) throws NullPointerException{
         setPlayer(path);
         setEvent(player);
         setListener(player);
@@ -72,7 +84,9 @@ public class AudioPlayer extends PlaybackListener{
             try {
                 player.play();
             } catch (JavaLayerException e) {
-                e.printStackTrace();
+                //!TODO: need here to log exception and report it via ex: mail
+            }catch(NullPointerException ex){
+                System.out.println("If you want to play next/previous song please enter 'next'/'previous' command.");
             }
         });
     }
@@ -80,39 +94,57 @@ public class AudioPlayer extends PlaybackListener{
     /**
      * *starts set thread
      * @throws IllegalThreadStateException if the thread was already started
+     * @throws SecurityException if interrupt wasn't successful
+     * @see Thread
      */
-    public void play() throws IllegalThreadStateException {
+    public void play() throws IllegalThreadStateException, SecurityException {
         setBackgroundPlayback(getDefaultFolder() + currentSong);
         //!this getter should not be removed
-        //!without it the event is not set
+        //*without it the event is not set
         getEventSource();
+
         System.out.println("playing '" + currentSong.substring(0, currentSong.length() -4).replace('_', ' ') + "' ...");
+        //?use reflection
+        if(isRunning){
+            this.player.close();
+            this.backgroundPlayback.interrupt();
+        }
+
+        isRunning = true;
         backgroundPlayback.start();
-    }
-
-    //FIXME: event need to return frame it stopped at
-    public void pause() {
-        System.out.println("FRAME: " + frameStoppedAt);
-        System.out.println("ID: " + event.getId());
-        System.out.println("SOURCE: " + event.getSource());
-    }
-
-    //FIXME: related to pause()
-    public void resume() {
+        System.out.println("next");
     }
 
     /**
      * *stops the currently playing song
      */
     public void stop() throws SecurityException, NullPointerException {
-        playbackFinished(event);
-        this.player.close();
-//        player.stop();
-        this.backgroundPlayback.interrupt();
+        if(player != null){
+            playbackFinished(event);
+            this.player.close();
+            this.backgroundPlayback.interrupt();
+            isRunning = false;
+        }
+    }
+
+    //FIXME: event need to return frame it stopped at
+    public void pause() {
+        /*
+        System.out.println("FRAME: " + frameStoppedAt);
+        System.out.println("ID: " + event.getId());
+        System.out.println("SOURCE: " + event.getSource());
+        */
+    }
+
+    //FIXME: related to pause()
+    public void resume() {
     }
 
     public void next() {
-        stop();
+        if(isRunning){
+            stop();
+            backgroundPlayback.interrupt();
+        }
         currentSong = opener.setCurrentSong(getIndex() +1);
 
         setNextSong();
@@ -124,7 +156,10 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     public void previous() {
-        stop();
+        if(isRunning){
+            stop();
+            backgroundPlayback.interrupt();
+        }
         currentSong =  opener.setCurrentSong(getIndex() -1);
 
         setNextSong();

@@ -1,16 +1,12 @@
 package audio.player;
-import java.io.IOException;
+
+import audio.controler.Controller;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-//        AudioPlayer player = new AudioPlayer();
-//        Controller controller = new Controller(player);
-
-        String audioFilePath = "D:\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\csgo\\sound\\kodua\\fortnite_emotes\\athena_emote_founders_music.wav";
+    public static void main(String[] args){
         SoundClip player = new SoundClip();
-        player.play();
-
-//        controller.menu();
-//        controller.simpleCmd();
+        Controller controller = new Controller(player);
+        controller.menu();
+        controller.cmd();
     }
 }

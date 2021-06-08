@@ -18,7 +18,6 @@ public class FileController {
     public FileController(String defaultFolder) {
         this.defaultFolder = defaultFolder;
         openFolder();
-//        listSongs();
     }
 
     /**

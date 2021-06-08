@@ -1,6 +1,6 @@
 package audio.player;
 
-import audio.opener.Opener;
+import audio.file.controler.FileController;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
@@ -12,8 +12,12 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Random;
 
+/**
+ * @deprecated due to many problems with javazoom library
+ */
+@Deprecated
 public class AudioPlayer extends PlaybackListener{
-    private final Opener opener = new Opener("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\");
+    private final FileController fileController = new FileController("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\");
     private int ID;
 
     private volatile long threadID;
@@ -36,7 +40,7 @@ public class AudioPlayer extends PlaybackListener{
     private volatile int frameStoppedAt;
     private volatile boolean isRunning;
 
-    public AudioPlayer() throws JavaLayerException{
+    public AudioPlayer(){
         ID = generateID();
     }
 
@@ -104,7 +108,6 @@ public class AudioPlayer extends PlaybackListener{
         getEventSource();
 
         System.out.println("playing '" + currentSong.substring(0, currentSong.length() -4).replace('_', ' ') + "' ...");
-        //?use reflection
         if(isRunning){
             this.player.close();
             this.backgroundPlayback.interrupt();
@@ -129,11 +132,9 @@ public class AudioPlayer extends PlaybackListener{
 
     //FIXME: event need to return frame it stopped at
     public void pause() {
-        /*
         System.out.println("FRAME: " + frameStoppedAt);
         System.out.println("ID: " + event.getId());
         System.out.println("SOURCE: " + event.getSource());
-        */
     }
 
     //FIXME: related to pause()
@@ -145,7 +146,7 @@ public class AudioPlayer extends PlaybackListener{
             stop();
             backgroundPlayback.interrupt();
         }
-        currentSong = opener.setCurrentSong(getIndex() +1);
+        currentSong = fileController.setCurrentSong(getIndex() +1);
 
         setNextSong();
         nextSong = getNextSong();
@@ -160,7 +161,7 @@ public class AudioPlayer extends PlaybackListener{
             stop();
             backgroundPlayback.interrupt();
         }
-        currentSong =  opener.setCurrentSong(getIndex() -1);
+        currentSong =  fileController.setCurrentSong(getIndex() -1);
 
         setNextSong();
         nextSong = getNextSong();
@@ -175,11 +176,11 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     public String getDefaultFolder() {
-        return opener.getDefaultFolder();
+        return fileController.getDefaultFolder();
     }
 
     public void setDefaultFolder(String path) {
-        opener.setDefaultFolder(path);
+        fileController.setDefaultFolder(path);
     }
 
     public String getPreviousSong() {
@@ -187,7 +188,7 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     private void setPreviousSong() {
-        previousSong = opener.getPreviousSong();
+        previousSong = fileController.getPreviousSong();
     }
 
     public String getNextSong() {
@@ -195,7 +196,7 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     private void setNextSong() {
-        nextSong = opener.getNextSong();
+        nextSong = fileController.getNextSong();
     }
 
     public String getCurrentSong() {
@@ -203,18 +204,18 @@ public class AudioPlayer extends PlaybackListener{
     }
 
     public int getIndex(){
-        return opener.getIndex();
+        return fileController.getIndex();
     }
 
     public void list(){
-        opener.listSongs();
+        fileController.listSongs();
     }
 
     /**
      *  @usageOf: setPreviousSong(), setNextSong() : we want to set next and previous song everytime we set new current one
      */
     public void setCurrentSong() {
-        currentSong = opener.setCurrentSong();
+        currentSong = fileController.setCurrentSong();
         setPreviousSong();
         setNextSong();
     }

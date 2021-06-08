@@ -1,4 +1,4 @@
-package audio.opener;
+package audio.file.controler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
-public class Opener {
+public class FileController {
     private final Scanner scanner = new Scanner(System.in);
     private String defaultFolder;
     private List<File> musicList = new ArrayList();
@@ -15,7 +15,7 @@ public class Opener {
     private volatile String nextSong;
     private volatile int index;
 
-    public Opener(String defaultFolder) {
+    public FileController(String defaultFolder) {
         this.defaultFolder = defaultFolder;
         openFolder();
 //        listSongs();

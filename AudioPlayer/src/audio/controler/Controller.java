@@ -1,6 +1,7 @@
 package audio.controler;
 
 import audio.player.AudioPlayer;
+import audio.player.SoundClip;
 
 import java.util.Scanner;
 
@@ -10,6 +11,9 @@ public class Controller {
     private String command;
 
     public Controller(AudioPlayer player){
+        this.player = player;
+    }
+    public Controller(SoundClip clip){
         this.player = player;
     }
 
@@ -38,11 +42,16 @@ public class Controller {
             System.out.print(">> ");
             command = scanner.nextLine().toLowerCase();
             switch (command) {
+                case "", " ","  " -> {}
+
                 case "play" -> {
                     player.play();
                 }
                 case "stop", "exit" -> {
                     player.stop();
+                }
+                case "pause" -> {
+                    player.pause();
                 }
                 case "next" -> {
                     player.next();

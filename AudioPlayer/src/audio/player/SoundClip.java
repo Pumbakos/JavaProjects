@@ -1,34 +1,50 @@
 package audio.player;
 
+import audio.controler.Controller;
+import audio.controler.Observer;
+import audio.controler.Subscriber;
 import audio.file.controler.FileController;
 
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
-public class SoundClip implements LineListener {
-    private static Thread mainClip;
-    private static volatile boolean playbackCompleted = false; //this flag indicates whether the playback completes or not.
+public class SoundClip extends Controller implements LineListener, Observer {
     private final int AMENDMENT = 100;
+    private Thread mainClip;
     private FileController fileController = new FileController("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\wav\\");
+    private List<Subscriber> subscribers = new ArrayList<>();
+    private volatile boolean playbackCompleted = false; //this flag indicates whether the playback completes or not
     private volatile Clip audioClip;
     private volatile String currentSong;
     private volatile String previousSong;
     private volatile String nextSong;
     private volatile int frameStoppedAt;
 
-    public SoundClip() {
+
+    private SoundClip() {
+    }
+
+    public static SoundClip getInstance() {
+        return Wrapper.instance;
     }
 
     /**
      * Play a given audio file.
      *
      * @param audioFilePath Path of the audio file.
-     *                      TODO: need to implement GC to delete obsolete songs
+     *                      TODO: need to implement GC to delete obsolete played songs
      */
     private void prepareClip(String audioFilePath) {
+        if (audioFilePath == null) {
+            throw new IllegalArgumentException();
+        }
+
         File audioFile = new File(audioFilePath);
 
         try {
@@ -61,8 +77,7 @@ public class SoundClip implements LineListener {
         }
     }
 
-
-    public void play() {
+    public final void play() {
         if (mainClip == null || !mainClip.isAlive()) {
             prepareClip(getDefaultFolder() + currentSong);
             mainClip.start();
@@ -72,7 +87,7 @@ public class SoundClip implements LineListener {
     /**
      * @throws NullPointerException when did not choose song
      */
-    public void stop() throws NullPointerException {
+    public final void stop() throws NullPointerException {
         if (!playbackCompleted) {
             audioClip.stop();
         } else {
@@ -83,14 +98,14 @@ public class SoundClip implements LineListener {
     /**
      * @throws NullPointerException when did not choose song
      */
-    public void pause() throws NullPointerException {
+    public final void pause() throws NullPointerException {
         if (!playbackCompleted) {
             frameStoppedAt = audioClip.getFramePosition();
             stop();
         } else System.out.println("Already paused.");
     }
 
-    public void resume() {
+    public final void resume() {
         if (playbackCompleted && audioClip != null) {
             audioClip.setFramePosition(frameStoppedAt - AMENDMENT);
             audioClip.start();
@@ -103,22 +118,8 @@ public class SoundClip implements LineListener {
         }
     }
 
-    /**
-     * Listens to the START and STOP events of the audio line.
-     */
-    @Override
-    public void update(LineEvent event) {
-        LineEvent.Type type = event.getType();
-
-        if (type == LineEvent.Type.START) {
-            playbackCompleted = false;
-        } else if (type == LineEvent.Type.STOP) {
-            playbackCompleted = true;
-        }
-    }
-
-    public void next() {
-        if(audioClip == null){
+    public final void next() {
+        if (audioClip == null) {
             prepareClip(getDefaultFolder() + currentSong);
         }
 
@@ -136,8 +137,8 @@ public class SoundClip implements LineListener {
         play();
     }
 
-    public void previous() {
-        if(audioClip == null){
+    public final void previous() {
+        if (audioClip == null) {
             prepareClip(getDefaultFolder() + currentSong);
         }
 
@@ -152,6 +153,59 @@ public class SoundClip implements LineListener {
         setPreviousSong();
         previousSong = getPreviousSong();
         play();
+    }
+
+    /**
+     * Listens to the START and STOP events of the audio line.
+     */
+    @Override
+    public final void update(LineEvent event) {
+        LineEvent.Type type = event.getType();
+
+        if (type == LineEvent.Type.START) {
+            playbackCompleted = false;
+        } else if (type == LineEvent.Type.STOP) {
+            playbackCompleted = true;
+            mainClip.interrupt();
+            audioClip.close();
+            notifySubscribers();
+        }
+    }
+
+    @Override
+    public boolean subscribe(Subscriber subscriber) {
+        if (subscriber == null) {
+            throw new IllegalArgumentException("Subscriber cannot be null.");
+        }
+        return subscribers.add(subscriber);
+    }
+
+    @Override
+    public boolean unsubscribe(Subscriber subscriber) {
+        if (subscriber == null) {
+            throw new IllegalArgumentException("Subscriber cannot be null.");
+        }
+
+        if (subscribers.isEmpty()) {
+            throw new NullPointerException("Subscribers list is empty.");
+        }
+
+        return subscribers.remove(subscriber);
+    }
+
+    @Override
+    public void notifySubscribers() {
+        for (Subscriber subscriber : subscribers) {
+            subscriber.update();
+        }
+    }
+
+    public synchronized void removeAllSubscribers() {
+        Iterator<Subscriber> it = subscribers.iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.remove();
+        }
     }
 
     private int generateID() {
@@ -197,7 +251,7 @@ public class SoundClip implements LineListener {
     /**
      * @usageOf: setPreviousSong(), setNextSong() : we want to set next and previous song everytime we set new current one
      */
-    public void setCurrentSong() {
+    public final void setCurrentSong() {
         currentSong = fileController.setCurrentSong();
         setPreviousSong();
         setNextSong();
@@ -207,7 +261,14 @@ public class SoundClip implements LineListener {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+    }
+
+    public String getLastCommand() {
+        return super.getLastCommand();
+    }
+
+    private static class Wrapper {
+        static SoundClip instance = new SoundClip();
     }
 }

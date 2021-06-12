@@ -1,21 +1,21 @@
 package audio.controler;
 
-import audio.player.AudioPlayer;
 import audio.player.SoundClip;
 
 import java.util.Scanner;
 
 public class Controller {
     private final Scanner scanner = new Scanner(System.in);
-    private AudioPlayer player;
     private SoundClip clip;
     private String command;
+    private String lastCommand;
+    private ClipQueue queue;
 
-    public Controller(AudioPlayer player){
-        this.player = player;
-    }
-    public Controller(SoundClip clip){
+    public Controller(){}
+
+    public Controller(SoundClip clip, ClipQueue queue){
         this.clip = clip;
+        this.queue = queue;
     }
 
     public void menu() {
@@ -40,42 +40,9 @@ public class Controller {
         System.out.println("Enter 'help' for help");
     }
 
-    /**
-     * @deprecated
-     */
-    @Deprecated
-    public void simpleCmd() {
-        do{
-            System.out.print(">> ");
-            command = scanner.nextLine().toLowerCase();
-            switch (command) {
-                case "", " ","  " -> {}
-
-                case "play" -> {
-                    player.play();
-                }
-                case "stop", "exit" -> {
-                    player.stop();
-                }
-                case "next" -> {
-                    player.next();
-                }
-                case "previous" -> {
-                    player.previous();
-                }
-                case "pause" -> {
-                    player.pause();
-                }
-                case "list" -> {
-                    player.list();
-                }
-                default -> help();
-            }
-        }while(!command.equalsIgnoreCase("exit"));
-    }
-
     public void cmd() {
         do{
+            lastCommand = command;
             System.out.print(">> ");
             command = scanner.nextLine().toLowerCase();
             switch (command) {
@@ -102,8 +69,16 @@ public class Controller {
                 case "list" -> {
                     clip.list();
                 }
+                case "queue" -> {
+                    queue.createQueue();
+                    queue.print();
+                }
                 default -> help();
             }
         }while(!command.equalsIgnoreCase("exit"));
+    }
+
+    public String getLastCommand(){
+        return lastCommand;
     }
 }

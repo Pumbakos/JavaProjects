@@ -1,4 +1,4 @@
-package audio.opener;
+package audio.file.controler;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
-public class Opener {
+public class FileController {
     private final Scanner scanner = new Scanner(System.in);
     private String defaultFolder;
     private List<File> musicList = new ArrayList();
@@ -15,17 +15,18 @@ public class Opener {
     private volatile String nextSong;
     private volatile int index;
 
-    public Opener(String defaultFolder) {
+    public FileController(){}
+
+    public FileController(String defaultFolder) {
         this.defaultFolder = defaultFolder;
         openFolder();
-//        listSongs();
     }
 
     /**
      * *Opens default music folder - my local actually :)
      * @return a list of read files
      */
-    public void openFolder() throws NullPointerException {
+    public final void openFolder() throws NullPointerException {
         File file = new File(defaultFolder);
         for (File f : file.listFiles()) {
             if (!f.isDirectory()) {
@@ -37,7 +38,7 @@ public class Opener {
     /**
      * *Displays songs saved at musicList
      */
-    public void listSongs() {
+    public final void listSongs() {
         for (int i = 0; i < musicList.size(); i++) {
             System.out.println((i + 1) + ". " + musicList.get(i).getName().
                     substring(0, musicList.get(i).getName().length() - 4).replace('_', ' '));
@@ -49,7 +50,7 @@ public class Opener {
      * @throws InputMismatchException when the usersSongChoice is a non-number
      * @return chosen song
      */
-    public String setCurrentSong() throws InputMismatchException {
+    public final String setCurrentSong() throws InputMismatchException {
         System.out.print("\nChoose song (1-" + musicList.size() + "): ");
         index = scanner.nextInt() -1;
 
@@ -61,7 +62,7 @@ public class Opener {
         return currentSong;
     }
 
-    public String setCurrentSong(int index){
+    public final String setCurrentSong(int index){
         if (index < 0){
             currentSong = musicList.get(musicList.size() -1).getName();
             this.index = musicList.size() -1;
@@ -94,7 +95,7 @@ public class Opener {
      * @throws NullPointerException if 'indexOfCurrentSong' is lower than 0
      * @return previousSong's name
      */
-    public String setPreviousSong(int indexOfCurrentSong) throws NullPointerException{
+    public final String setPreviousSong(int indexOfCurrentSong) throws NullPointerException{
         if (indexOfCurrentSong < 1){
             previousSong = musicList.get(musicList.size() -1).toString();
         }
@@ -112,7 +113,7 @@ public class Opener {
      * @throws ArrayIndexOutOfBoundsException if 'indexOfCurrentSong' is greater than size of list -1
      * @return nextSong's name
      */
-    public String setNextSong(int indexOfCurrentSong) throws ArrayIndexOutOfBoundsException{
+    public final String setNextSong(int indexOfCurrentSong) throws ArrayIndexOutOfBoundsException{
         if (indexOfCurrentSong > musicList.size() -2){
             nextSong = musicList.get(0).toString();
         }
@@ -138,11 +139,18 @@ public class Opener {
         return defaultFolder;
     }
 
-    public void setDefaultFolder(String defaultFolder) {
+    public void setDefaultFolder(String defaultFolder){
+        if (defaultFolder == null){
+            throw new IllegalArgumentException();
+        }
         this.defaultFolder = defaultFolder;
     }
 
     public int getIndex() {
         return index;
+    }
+
+    public List<File> getMusicList(){
+        return musicList;
     }
 }

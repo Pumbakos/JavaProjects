@@ -1,16 +1,19 @@
 package audio.player;
 
 import audio.controler.Controller;
-import javazoom.jl.decoder.JavaLayerException;
-
-import java.io.IOException;
+import audio.controler.ClipQueue;
 
 public class Main {
-    public static void main(String[] args) throws IOException, JavaLayerException {
-        AudioPlayer player = new AudioPlayer();
-        Controller controller = new Controller(player);
+    public static void main(String[] args) {
+        SoundClip clip = SoundClip.getInstance();
+        ClipQueue queue = new ClipQueue(clip);
+        Controller controller = new Controller(clip, queue);
+
+        clip.subscribe(queue);
 
         controller.menu();
-        controller.simpleCmd();
+        controller.cmd();
+
+        clip.getLastCommand();
     }
 }

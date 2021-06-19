@@ -4,16 +4,16 @@ import audio.player.SoundClip;
 
 import java.util.Scanner;
 
-public class Controller {
+public class Controller{
     private final Scanner scanner = new Scanner(System.in);
     private SoundClip clip;
-    private String command;
-    private String lastCommand;
     private ClipQueue queue;
+    private volatile String command;
+    private volatile String lastCommand;
 
     public Controller(){}
 
-    public Controller(SoundClip clip, ClipQueue queue){
+    public void setProperties(ClipQueue queue, SoundClip clip){
         this.clip = clip;
         this.queue = queue;
     }
@@ -41,6 +41,7 @@ public class Controller {
     }
 
     public void cmd() {
+        lastCommand = "play";
         do{
             lastCommand = command;
             System.out.print(">> ");

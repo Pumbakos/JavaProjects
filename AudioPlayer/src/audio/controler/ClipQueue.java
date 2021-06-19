@@ -32,7 +32,7 @@ public class ClipQueue extends FileController implements Subscriber{
     }
 
     @Override
-    public void update() {
+    public void songUpdate() {
         if (!soundClip.getLastCommand().equals("stop"))
             soundClip.next();
     }

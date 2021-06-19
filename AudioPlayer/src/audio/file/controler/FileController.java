@@ -1,10 +1,7 @@
 package audio.file.controler;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class FileController {
     private final Scanner scanner = new Scanner(System.in);
@@ -15,29 +12,22 @@ public class FileController {
     private volatile String nextSong;
     private volatile int index;
 
-    public FileController(){}
+    protected FileController(){}
 
     public FileController(String defaultFolder) {
         this.defaultFolder = defaultFolder;
         openFolder();
     }
 
-    /**
-     * *Opens default music folder - my local actually :)
-     * @return a list of read files
-     */
-    public final void openFolder() throws NullPointerException {
+    public final void openFolder() {
         File file = new File(defaultFolder);
-        for (File f : file.listFiles()) {
+        for (File f : Objects.requireNonNull(file.listFiles())) {
             if (!f.isDirectory()) {
                 musicList.add(new File(f.getName()));
             }
         }
     }
 
-    /**
-     * *Displays songs saved at musicList
-     */
     public final void listSongs() {
         for (int i = 0; i < musicList.size(); i++) {
             System.out.println((i + 1) + ". " + musicList.get(i).getName().
@@ -52,7 +42,15 @@ public class FileController {
      */
     public final String setCurrentSong() throws InputMismatchException {
         System.out.print("\nChoose song (1-" + musicList.size() + "): ");
-        index = scanner.nextInt() -1;
+        String input = scanner.nextLine();
+        try {
+            index = Integer.parseInt(input) -1;
+        }catch(NumberFormatException e){
+            System.err.println("Please choose between the range (1-" + musicList.size() + "): ");
+        }
+        if (index > musicList.size() || index < 0){
+            throw new InputMismatchException("Out of the range.");
+        }
 
         currentSong = musicList.get(index).getName();
 

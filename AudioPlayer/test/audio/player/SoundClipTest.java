@@ -1,18 +1,49 @@
 package audio.player;
 
 import audio.controler.ClipQueue;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SoundClipTest {
-    SoundClip clip = SoundClip.getInstance();
+    private final String defaultFolder = "D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\wav\\";
+    private SoundClip clip = SoundClip.getInstance();
+    private String packageName = SoundClip.class.getPackage().getName();
+    private String path = packageName + ".SoundClip";
 
     @Test
     void setDefaultFolderToNull(){
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> clip.setDefaultFolder(null));
+    }
+
+    @Test
+    void prepareClipWithNullPath() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, ClassNotFoundException {
+        Method m = clip.getClass().getDeclaredMethod("prepareClip", String.class);
+        clip.setDefaultFolder(defaultFolder);
+        String arg = null;
+        m.setAccessible(true);
+        Assertions.assertFalse((Boolean) m.invoke(clip, arg));
+    }
+
+    @Test
+    void playWithNullThread(){
+        NullPointerException e = assertThrows(NullPointerException.class, clip::play);
+    }
+
+    @Test
+    void stopWithNullSong(){
+        NullPointerException e = assertThrows(NullPointerException.class, clip::stop);
+    }
+
+    @Test
+    void pauseWithNullSong(){
+        NullPointerException e = assertThrows(NullPointerException.class, clip::pause);
     }
 
     @Test

@@ -4,7 +4,7 @@ import audio.controler.ClipQueue;
 import audio.controler.Controller;
 import audio.controler.Observer;
 import audio.controler.Subscriber;
-import audio.file.controler.FileController;
+import audio.file.controller.FileController;
 import audio.player.exceptions.SongNotSetException;
 
 import javax.sound.sampled.*;

@@ -1,4 +1,4 @@
-package audio.file.controler;
+package audio.file.controller;
 
 public enum ClipTitle {
     BANDYTA("bandyta.wav"),

@@ -1,4 +1,4 @@
-package audio.file.controler;
+package audio.file.controller;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;

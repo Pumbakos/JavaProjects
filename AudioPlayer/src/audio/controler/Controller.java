@@ -27,7 +27,8 @@ public class Controller{
         System.out.println("Enter 'next' for next song.");
         System.out.println("Enter 'previous' for previous song.");
         System.out.println("Enter 'list' for listing all songs.");
-        System.out.println("Enter 'help' for help");
+        System.out.println("Enter 'folder -c' to change default folder.");
+        System.out.println("Enter 'help' for help.");
 //        System.out.println("Enter 'queue' to see current queue");
 
         System.out.println("\nHere are songs from your folder, choose one:");
@@ -69,6 +70,10 @@ public class Controller{
                 }
                 case "list" -> {
                     clip.list();
+                }
+                case "folder -c" -> {
+                    System.out.print("Enter path to folder: ");
+                    clip.setDefaultFolder(new Scanner(System.in).nextLine());
                 }
                 case "queue" -> {
                     queue.createQueue();

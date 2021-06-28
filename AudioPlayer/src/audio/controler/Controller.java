@@ -4,16 +4,16 @@ import audio.player.SoundClip;
 
 import java.util.Scanner;
 
-public class Controller {
+public class Controller{
     private final Scanner scanner = new Scanner(System.in);
     private SoundClip clip;
-    private String command;
-    private String lastCommand;
     private ClipQueue queue;
+    private volatile String command;
+    private volatile String lastCommand;
 
     public Controller(){}
 
-    public Controller(SoundClip clip, ClipQueue queue){
+    public void setProperties(ClipQueue queue, SoundClip clip){
         this.clip = clip;
         this.queue = queue;
     }
@@ -27,7 +27,8 @@ public class Controller {
         System.out.println("Enter 'next' for next song.");
         System.out.println("Enter 'previous' for previous song.");
         System.out.println("Enter 'list' for listing all songs.");
-        System.out.println("Enter 'help' for help");
+        System.out.println("Enter 'folder -c' to change default folder.");
+        System.out.println("Enter 'help' for help.");
 //        System.out.println("Enter 'queue' to see current queue");
 
         System.out.println("\nHere are songs from your folder, choose one:");
@@ -41,6 +42,7 @@ public class Controller {
     }
 
     public void cmd() {
+        lastCommand = "play";
         do{
             lastCommand = command;
             System.out.print(">> ");
@@ -68,6 +70,10 @@ public class Controller {
                 }
                 case "list" -> {
                     clip.list();
+                }
+                case "folder -c" -> {
+                    System.out.print("Enter path to folder: ");
+                    clip.setDefaultFolder(new Scanner(System.in).nextLine());
                 }
                 case "queue" -> {
                     queue.createQueue();

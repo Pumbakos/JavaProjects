@@ -1,9 +1,11 @@
 package audio.player;
 
+import audio.controler.ClipQueue;
 import audio.controler.Controller;
 import audio.controler.Observer;
 import audio.controler.Subscriber;
-import audio.file.controler.FileController;
+import audio.file.controller.FileController;
+import audio.exception.SongNotSetException;
 
 import javax.sound.sampled.*;
 import java.io.File;
@@ -14,24 +16,36 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-public class SoundClip extends Controller implements LineListener, Observer {
+public class SoundClip implements LineListener, Observer {
     private final int AMENDMENT = 100;
     private Thread mainClip;
+    private Controller controller = new Controller();
     private FileController fileController = new FileController("D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\wav\\");
     private List<Subscriber> subscribers = new ArrayList<>();
     private volatile boolean playbackCompleted = false; //this flag indicates whether the playback completes or not
+    private volatile String lastCommand;
     private volatile Clip audioClip;
     private volatile String currentSong;
     private volatile String previousSong;
     private volatile String nextSong;
     private volatile int frameStoppedAt;
-
-
     private SoundClip() {
     }
 
     public static SoundClip getInstance() {
         return Wrapper.instance;
+    }
+
+    public void setProperties(ClipQueue queue, SoundClip clip){
+        controller.setProperties(queue, clip);
+    }
+
+    public void menu(){
+        controller.menu();
+    }
+
+    public void cmd(){
+        controller.cmd();
     }
 
     /**
@@ -40,9 +54,10 @@ public class SoundClip extends Controller implements LineListener, Observer {
      * @param audioFilePath Path of the audio file.
      *                      TODO: need to implement GC to delete obsolete played songs
      */
-    private void prepareClip(String audioFilePath) {
+    private boolean prepareClip(String audioFilePath) {
         if (audioFilePath == null) {
-            throw new IllegalArgumentException();
+//            throw new IllegalArgumentException();
+            return false;
         }
 
         File audioFile = new File(audioFilePath);
@@ -75,19 +90,20 @@ public class SoundClip extends Controller implements LineListener, Observer {
             System.out.println("Audio line for playing back is unavailable.");
             ex.printStackTrace();
         }
+        return true;
     }
 
-    public final void play() {
-        if (mainClip == null || !mainClip.isAlive()) {
-            prepareClip(getDefaultFolder() + currentSong);
+    public final void play() throws NullPointerException, SongNotSetException {
+        if (prepareClip(getDefaultFolder() + currentSong))
             mainClip.start();
-        }
+        else throw new SongNotSetException();
     }
 
-    /**
-     * @throws NullPointerException when did not choose song
-     */
     public final void stop() throws NullPointerException {
+        if (audioClip == null) {
+            throw new NullPointerException("Did not choose the song");
+        }
+
         if (!playbackCompleted) {
             audioClip.stop();
         } else {
@@ -95,10 +111,11 @@ public class SoundClip extends Controller implements LineListener, Observer {
         }
     }
 
-    /**
-     * @throws NullPointerException when did not choose song
-     */
     public final void pause() throws NullPointerException {
+        if (audioClip == null) {
+            throw new NullPointerException("Did not choose the song");
+        }
+
         if (!playbackCompleted) {
             frameStoppedAt = audioClip.getFramePosition();
             stop();
@@ -106,11 +123,19 @@ public class SoundClip extends Controller implements LineListener, Observer {
     }
 
     public final void resume() {
-        if (playbackCompleted && audioClip != null) {
-            audioClip.setFramePosition(frameStoppedAt - AMENDMENT);
-            audioClip.start();
-            playbackCompleted = false;
+        if (audioClip == null) {
+            throw new NullPointerException("Did not choose the song");
+        }
 
+        if (playbackCompleted) {
+            audioClip.setFramePosition(frameStoppedAt - AMENDMENT);
+
+            if (!mainClip.isInterrupted()) {
+                mainClip.interrupt();
+            }
+
+            playbackCompleted = false;
+            mainClip.start();
             while (!playbackCompleted) {
                 sleep(1000);
             }
@@ -126,7 +151,7 @@ public class SoundClip extends Controller implements LineListener, Observer {
         if (!playbackCompleted) {
             stop();
         }
-
+        lastCommand = controller.getLastCommand();
         currentSong = fileController.setCurrentSong(getIndex() + 1);
 
         setNextSong();
@@ -166,9 +191,12 @@ public class SoundClip extends Controller implements LineListener, Observer {
             playbackCompleted = false;
         } else if (type == LineEvent.Type.STOP) {
             playbackCompleted = true;
+            if(!getLastCommand().equals("stop")){
+                notifySubscribers();
+                return;
+            }
             mainClip.interrupt();
             audioClip.close();
-            notifySubscribers();
         }
     }
 
@@ -196,7 +224,7 @@ public class SoundClip extends Controller implements LineListener, Observer {
     @Override
     public void notifySubscribers() {
         for (Subscriber subscriber : subscribers) {
-            subscriber.update();
+            subscriber.songUpdate();
         }
     }
 
@@ -265,7 +293,11 @@ public class SoundClip extends Controller implements LineListener, Observer {
     }
 
     public String getLastCommand() {
-        return super.getLastCommand();
+        return lastCommand = controller.getLastCommand();
+    }
+
+    public Controller getController() {
+        return controller;
     }
 
     private static class Wrapper {

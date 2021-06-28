@@ -1,6 +1,6 @@
 package audio.controler;
 
-import audio.file.controler.FileController;
+import audio.file.controller.FileController;
 import audio.player.SoundClip;
 
 import java.io.File;
@@ -19,7 +19,7 @@ public class ClipQueue extends FileController implements Subscriber{
     public ClipQueue(){}
 
     public void createQueue(){
-        List<File> tempList = super.getMusicList();
+        List<File> tempList = super.getSongClips();
         for (File f : tempList) {
             queue.addFirst(f);
         }
@@ -32,7 +32,7 @@ public class ClipQueue extends FileController implements Subscriber{
     }
 
     @Override
-    public void update() {
+    public void songUpdate() {
         if (!soundClip.getLastCommand().equals("stop"))
             soundClip.next();
     }

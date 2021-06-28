@@ -1,5 +1,8 @@
 package audio.file.controller;
 
+import audio.exception.ListNotFoundException;
+import audio.exception.NotFoundException;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -8,13 +11,11 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class FileDownloader {
-    //    private static final String DIRECTORY = "src/audio/file/controller/";
     private static final String DIRECTORY = "D:\\Desktop\\CODE\\JAVA\\AudioPlayer\\music\\wav\\downloaded\\";
-    private static final int MAX_FILE_SIZE = 50332648;
-    //    static String requestUrl = RemotePath.SERVER.getName() + RemotePath.FILE.getName() + RemotePath.DOWNLOAD.getName() + "/";
+    private static final byte ERROR_STATUS = -1;
+
     static String requestUrl = "http://localhost:8080/file/download/";
     private String link;
     private File out;
@@ -24,99 +25,38 @@ public class FileDownloader {
         this.out = out;
     }
 
-    public FileDownloader() {
+    public FileDownloader() {}
 
+    public void download(String filename) {
+        long size = downloadClipSize(filename);
+        if (size == ERROR_STATUS) {
+            throw new NotFoundException();
+        }
+
+        try {
+            downloadClip(filename, size);
+        } catch (IOException e) {
+            System.err.println("There was a problem with the server");
+        }
     }
 
-    public static String getDirectory() {
+    public List<String> getList() throws ListNotFoundException {
+        if (getListFromServer() == null) {
+            throw new ListNotFoundException();
+        }
+        return getListFromServer();
+    }
+
+    public String getDirectory() {
         return DIRECTORY;
     }
 
-    public static String getRequestUrl() {
+    public String getRequestUrl() {
         return requestUrl;
     }
 
     public static void setRequestUrl(String requestUrl) {
         FileDownloader.requestUrl = requestUrl;
-    }
-
-    /**
-     * @deprecated
-     */
-    @Deprecated
-    public void download(String filename) {
-        try {
-            setOut(new File(DIRECTORY + filename));
-            String request = requestUrl + filename;
-
-            URL url = new URL(request);
-            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-
-            BufferedInputStream in = new BufferedInputStream(http.getInputStream());
-            FileOutputStream fos = new FileOutputStream(out);
-            BufferedOutputStream bos = new BufferedOutputStream(fos, 49152);
-
-            byte[] buffer = new byte[49152];
-            int read = 0;
-
-            while ((read - in.read(buffer, 0, 49152)) >= 0) {
-                bos.write(buffer, 0, read);
-            }
-
-            bos.close();
-            in.close();
-
-            System.out.println("COMPLETED");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void downloadWav(String filename) throws IOException {
-        setOut(new File(DIRECTORY + filename));
-        String request = requestUrl + filename;
-
-        URL url = new URL(request);
-        InputStream in = url.openStream();
-        ReadableByteChannel urlChannel = Channels.newChannel(in);
-
-        FileChannel channel = new FileOutputStream(getOut()).getChannel();
-        channel.transferFrom(urlChannel, 0, MAX_FILE_SIZE);
-    }
-
-    public List<String> getList() {
-        String listFromServer = getListFromServer();
-        List<String> list = convertToList(Objects.requireNonNull(listFromServer));
-        return list;
-    }
-
-    private String getListFromServer() {
-        try {
-            StringBuilder result = new StringBuilder();
-
-            URL url = new URL(RemotePath.SERVER + RemotePath.FILE + RemotePath.DOWNLOAD + RemotePath.LIST);
-            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-            http.setRequestMethod("GET");
-
-            try (var reader = new BufferedReader(new InputStreamReader(http.getInputStream()))) {
-                for (String line; (line = reader.readLine()) != null; ) {
-                    result.append(line);
-                }
-            } catch (Exception e) {
-                return null;
-            }
-            return result.toString();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private List<String> convertToList(String listAsString) {
-        List<String> list = Arrays.asList(listAsString.replace("[", "")
-                .replace("]", "").replace("\"", "").split(","));
-        return list;
     }
 
     public String getLink() {
@@ -133,5 +73,68 @@ public class FileDownloader {
 
     public void setOut(File out) {
         this.out = out;
+    }
+
+    private void downloadClip(String filename, long fileSize) throws IOException {
+        setOut(new File(DIRECTORY + filename));
+        String request = requestUrl + filename;
+
+        URL url = new URL(request);
+        InputStream in = url.openStream();
+        ReadableByteChannel urlChannel = Channels.newChannel(in);
+
+        FileChannel channel = new FileOutputStream(getOut()).getChannel();
+        channel.transferFrom(urlChannel, 0, fileSize);
+    }
+
+    private long downloadClipSize(String filename) {
+        setOut(new File(DIRECTORY + filename));
+        String request = requestUrl + filename + RemotePath.SIZE;
+
+        try {
+            StringBuilder result = new StringBuilder();
+            URL url = new URL(request);
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+            http.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(http.getInputStream()));
+
+            for (String line; (line = reader.readLine()) != null; ) {
+                result.append(line);
+            }
+
+            return Long.parseLong(result.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ERROR_STATUS;
+        }
+    }
+
+    private List<String> getListFromServer() {
+        try {
+            StringBuilder result = new StringBuilder();
+
+            URL url = new URL(RemotePath.SERVER + RemotePath.FILE + RemotePath.DOWNLOAD + RemotePath.LIST);
+            HttpURLConnection http = (HttpURLConnection) url.openConnection();
+            http.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(http.getInputStream()));
+
+            for (String line; (line = reader.readLine()) != null; ) {
+                result.append(line);
+            }
+
+            return convertToList(result.toString());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private List<String> convertToList(String listAsString) {
+        List<String> list = Arrays.asList(listAsString.replace("[", "")
+                .replace("]", "").replace("\"", "").split(","));
+        return list;
     }
 }

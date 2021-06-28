@@ -5,7 +5,7 @@ import audio.controler.Controller;
 import audio.controler.Observer;
 import audio.controler.Subscriber;
 import audio.file.controller.FileController;
-import audio.player.exceptions.SongNotSetException;
+import audio.exception.SongNotSetException;
 
 import javax.sound.sampled.*;
 import java.io.File;

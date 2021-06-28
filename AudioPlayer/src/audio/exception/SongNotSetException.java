@@ -1,11 +1,13 @@
-package audio.player.exceptions;
+package audio.exception;
+
+import org.jetbrains.annotations.NotNull;
 
 public class SongNotSetException extends RuntimeException{
     public SongNotSetException(){
         super();
     }
 
-    public SongNotSetException(String message){
+    public SongNotSetException(@NotNull String message){
         super(message);
     }
 }

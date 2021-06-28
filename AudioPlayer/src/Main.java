@@ -1,8 +1,9 @@
 import audio.controler.ClipQueue;
+import audio.exception.ListNotFoundException;
+import audio.exception.NotFoundException;
 import audio.file.controller.FileDownloader;
 import audio.player.SoundClip;
 
-import java.io.IOException;
 import java.util.List;
 
 public class Main {
@@ -17,16 +18,19 @@ public class Main {
 
         FileDownloader fileDownloader = new FileDownloader();
 
-        fileDownloader.setLink(FileDownloader.getRequestUrl());
+        fileDownloader.setLink(fileDownloader.getRequestUrl());
 
         new Thread(() -> {
-            List<String> list = fileDownloader.getList();
-            for (String s : list) {
-                System.out.println(s);
-            }
+            List<String> list = null;
             try {
-                fileDownloader.downloadWav(list.get(4));
-            } catch (IOException e) {
+                list = fileDownloader.getList();
+            } catch (ListNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                fileDownloader.download(list.get(3));
+            } catch (NotFoundException e) {
                 e.printStackTrace();
             }
         }).start();

@@ -28,6 +28,7 @@ import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 public class FileResource {
     // define location
     private static final String DIRECTORY = System.getProperty("user.home") + "/Downloads/";
+    private static final byte ERROR_STATUS = -1;
     private List<String> filenames = new ArrayList<>();
 
     @PostMapping(EndPoint.UPLOAD)
@@ -48,7 +49,7 @@ public class FileResource {
         }
     }
 
-    @GetMapping(EndPoint.DOWNLOAD + "/{filename}")
+    @GetMapping(EndPoint.DOWNLOAD + EndPoint.FILENAME)
     public ResponseEntity<Resource> downloadFiles(@PathVariable("filename") String filename) throws IOException {
         Path filePath = get(DIRECTORY).toAbsolutePath().normalize().resolve(filename);
         if (!Files.exists(filePath)) {
@@ -66,5 +67,20 @@ public class FileResource {
     @GetMapping(EndPoint.DOWNLOAD + EndPoint.LIST)
     public List<String> downloadAllFiles() {
         return filenames;
+    }
+
+
+    @GetMapping(EndPoint.DOWNLOAD + EndPoint.FILENAME + EndPoint.SIZE)
+    public long getFileSize(@PathVariable("filename") String filename) {
+        Path path = get(DIRECTORY).toAbsolutePath().normalize().resolve(filename);
+        if (!Files.exists(path)) {
+            return ERROR_STATUS;
+        }
+
+        try {
+            return Files.size(path);
+        } catch (IOException e) {
+            return ERROR_STATUS;
+        }
     }
 }
